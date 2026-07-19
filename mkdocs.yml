@@ -1,0 +1,57 @@
+site_name: ChatZulip 文档
+site_url: https://arch.gh.wzhecnu.cn/ChatZulip/
+repo_url: https://github.com/ChatArch/ChatZulip
+repo_name: ChatArch/ChatZulip
+edit_uri: edit/main/docs/
+docs_dir: docs/
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 中文
+          build: true
+          site_name: ChatZulip 文档
+        - locale: en
+          name: English
+          build: true
+          site_name: ChatZulip Documentation
+          nav_translations:
+            首页: Home
+            CLI / API: CLI / API
+            CLI 能力地图: CLI Capability Map
+            Python 接口树: Python Interface Tree
+            路线图: Roadmap
+            开发计划: Development Plan
+extra:
+  alternate:
+    - name: 中文
+      link: /ChatZulip/
+      lang: zh
+    - name: English
+      link: /ChatZulip/en/
+      lang: en
+nav:
+  - 首页: index.md
+  - CLI / API:
+      - CLI 能力地图: cli-tree.md
+      - Python 接口树: interface-tree.md
+  - 路线图:
+      - 开发计划: development-plan.md
