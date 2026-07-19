@@ -17,7 +17,7 @@
 
 # ChatZulip
 
-ChatZulip: ChatArch Zulip integration package.
+ChatZulip is the ChatArch Zulip integration package. It provides ChatEnv-backed Zulip configuration, a Zulip REST client, read-oriented CLI commands, Markdown news digests, and MCP adapters.
 
 ## Quick Start
 
@@ -26,7 +26,13 @@ pip install -e ".[dev]"
 chatzulip --help
 chatzulip --version
 python -m pytest -q
-python -m build
+
+# Configure Zulip credentials with ChatEnv, then use the CLI.
+chatenv test -t zulip -I
+chatzulip streams
+chatzulip topics --stream general
+chatzulip messages --stream general --before 5
+chatzulip news --stream general --since-hours 24 --output zulip-news.md
 ```
 
 ## CLI Contract

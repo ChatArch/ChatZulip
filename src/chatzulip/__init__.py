@@ -1,5 +1,8 @@
 """ChatZulip package."""
 
-__all__ = ["__version__"]
+from .client import ZulipClient
+from .config import ZulipConfig
 
-__version__ = "0.0.1"
+__all__ = ["ZulipClient", "ZulipConfig", "__version__"]
+
+__version__ = "0.1.0"
