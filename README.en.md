@@ -35,9 +35,11 @@ chatzulip messages --stream general --before 5
 chatzulip news --stream general --since-hours 24 --output zulip-news.md
 ```
 
+For package boundaries, CLI/API conventions, and release order, see [ChatZulip Specification](docs/specification.en.md).
+
 ## CLI Contract
 
-This template depends on `chatstyle>=0.1.0,<0.2.0` and `chatenv>=0.2.0,<0.3.0`. New commands should prefer:
+This package depends on `chatstyle>=0.1.0,<0.2.0`, `chatenv>=0.2.3,<0.3.0`, and `httpx>=0.28.1,<1.0`. New commands should prefer:
 
 - `CommandSchema` / `CommandField` for inputs.
 - `add_interactive_option()` for the shared `-i/-I` switch.
@@ -47,9 +49,10 @@ This template depends on `chatstyle>=0.1.0,<0.2.0` and `chatenv>=0.2.0,<0.3.0`. 
 ## Layout
 
 - `src/`: package source code
-- `tests/code-tests/`: code tests and migrated historical tests
-- `tests/cli-tests/`: real CLI tests, doc-first
-- `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
+- `tests/code-tests/`: client, operations, config, and other code tests
+- `tests/cli-tests/`: doc-first real-service/manual CLI cases
+- `tests/mock-cli-tests/`: fake-client/mock CLI automated tests
+- `tests/test_version.py`: template-level version smoke
 - `docs/`: long-lived project docs built by mkdocs
 
 ## Development Notes
