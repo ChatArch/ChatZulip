@@ -1,6 +1,6 @@
 # ChatZulip 文档
 
-ChatZulip 是 ChatArch 系列 Python 包。这个文档站提供长期维护的使用说明、CLI/API 入口、能力地图和路线图。生成模板后，请把占位说明替换为当前包已经实现、探索过或计划中的真实内容。
+ChatZulip 是 ChatArch 的 Zulip 集成包。当前功能版把 `ChatTool` 里的 Zulip client、read-oriented CLI、Markdown news digest 和 MCP adapter 提取到独立包中，并保留后续 `ChatTool` 父包移除的清晰边界。
 
 站点入口：<https://arch.gh.wzhecnu.cn/ChatZulip/>
 
@@ -8,9 +8,18 @@ ChatZulip 是 ChatArch 系列 Python 包。这个文档站提供长期维护的�
 
 | 场景 | 文档 |
 | --- | --- |
+| 了解包身份、配置边界、发布 gate 和父包迁移顺序 | [ChatZulip 规范](specification.md) |
 | 第一次安装、运行 CLI、确认包可用 | [CLI 能力地图](cli-tree.md) |
 | 从 Python 代码调用包能力 | [Python 接口树](interface-tree.md) |
 | 记录已实现、已验证、未实现能力边界 | [开发计划](development-plan.md) |
+
+## 当前能力摘要
+
+- ChatEnv provider：`zulip`，字段使用 `ZULIP_*` 服务语义。
+- CLI：`streams`、`topics`、`topic`、`messages`、`profile`、`news`。
+- Python API：`ZulipClient` 和 `chatzulip.operations`。
+- MCP adapter：`chatzulip.mcp.register()`。
+- 写操作：先作为 Python/MCP 能力保留，暂不进入默认 CLI。
 
 ## 文档状态约定
 

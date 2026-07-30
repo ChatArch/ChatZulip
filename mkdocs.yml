@@ -35,6 +35,8 @@ plugins:
           site_name: ChatZulip Documentation
           nav_translations:
             首页: Home
+            规范: Specification
+            ChatZulip 规范: ChatZulip Specification
             CLI / API: CLI / API
             CLI 能力地图: CLI Capability Map
             Python 接口树: Python Interface Tree
@@ -50,6 +52,8 @@ extra:
       lang: en
 nav:
   - 首页: index.md
+  - 规范:
+      - ChatZulip 规范: specification.md
   - CLI / API:
       - CLI 能力地图: cli-tree.md
       - Python 接口树: interface-tree.md

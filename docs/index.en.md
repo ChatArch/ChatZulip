@@ -1,14 +1,23 @@
 # ChatZulip Docs
 
-ChatZulip is a ChatArch Python package. This documentation site should hold long-lived usage notes, CLI/API entry points, capability maps, and roadmap notes. After scaffolding, replace placeholders with behavior that is actually implemented, explored, or planned for this package.
+ChatZulip is the ChatArch Zulip integration package. The current functional version extracts the Zulip client, read-oriented CLI, Markdown news digest, and MCP adapter from `ChatTool` into a standalone package while keeping the follow-up `ChatTool` parent-removal boundary explicit.
 
 ## Choose By Scenario
 
 | Scenario | Document |
 | --- | --- |
+| Understand package identity, configuration boundaries, release gates, and parent migration order | [ChatZulip Specification](specification.en.md) |
 | Install the package, run the CLI, and confirm it works | [CLI Capability Map](cli-tree.md) |
 | Call package behavior directly from Python | [Python Interface Tree](interface-tree.md) |
 | Record implemented, verified, and planned capability boundaries | [Development Plan](development-plan.md) |
+
+## Current Capability Summary
+
+- ChatEnv provider: `zulip`, with `ZULIP_*` service-oriented fields.
+- CLI: `streams`, `topics`, `topic`, `messages`, `profile`, and `news`.
+- Python API: `ZulipClient` and `chatzulip.operations`.
+- MCP adapter: `chatzulip.mcp.register()`.
+- Write operations: available as Python/MCP capabilities, not default CLI commands yet.
 
 ## Documentation Status
 
