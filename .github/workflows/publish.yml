@@ -44,6 +44,15 @@ jobs:
               print(f"version={version}", file=output)
               print(f"tag=v{version}", file=output)
           PY
+      - name: Check manual release branch
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]; then
+            echo "Manual releases must run from ${DEFAULT_BRANCH}; got ${GITHUB_REF_NAME}."
+            exit 1
+          fi
       - name: Check tag matches package version
         if: github.event_name == 'push'
         env:
@@ -51,6 +60,16 @@ jobs:
         run: |
           if [ "${GITHUB_REF_NAME}" != "${RELEASE_TAG}" ]; then
             echo "Tag ${GITHUB_REF_NAME} does not match package version ${RELEASE_TAG}."
+            exit 1
+          fi
+      - name: Check release commit is on default branch
+        if: github.event_name == 'push'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch origin "${DEFAULT_BRANCH}"
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" "origin/${DEFAULT_BRANCH}"; then
+            echo "Release tag commit ${GITHUB_SHA} is not contained in origin/${DEFAULT_BRANCH}."
             exit 1
           fi
       - name: Check PyPI version
@@ -80,9 +99,11 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               print(f"exists={exists}", file=output)
           PY
-      - name: Stop when version is already on PyPI
+      - name: Fail when version is already on PyPI
         if: steps.pypi.outputs.exists == 'true'
-        run: echo "ChatZulip ${{ steps.meta.outputs.version }} is already on PyPI; skipping publish."
+        run: |
+          echo "ChatZulip ${{ steps.meta.outputs.version }} is already on PyPI; refusing duplicate publish."
+          exit 1
       - name: Build distribution
         if: steps.pypi.outputs.exists == 'false'
         run: |
