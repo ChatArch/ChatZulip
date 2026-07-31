@@ -31,6 +31,8 @@ python -m pytest -q
 chatenv test -t zulip -I
 chatzulip streams
 chatzulip topics --stream general
+chatzulip search-topics conjecture --all-streams
+chatzulip search comparator --stream lean4 --since-hours 168
 chatzulip messages --stream general --before 5
 chatzulip news --stream general --since-hours 24 --output zulip-news.md
 ```

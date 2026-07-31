@@ -28,6 +28,8 @@ from chatzulip import operations
 client = ZulipClient()
 streams = operations.list_streams(client)
 messages = operations.get_messages(stream="general", topic="release", client=client)
+topic_hits = operations.search_topics("conjecture", all_streams=True, client=client)
+message_hits = operations.search_messages("comparator", streams=["lean4"], client=client)
 markdown = operations.render_topic_markdown("general", "release", messages)
 ```
 

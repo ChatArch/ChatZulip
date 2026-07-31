@@ -7,6 +7,8 @@ from chatzulip.cli import main
 
 
 class FakeClient:
+    site = "https://leanprover.zulipchat.com"
+
     def list_subscriptions(self):
         return [{"name": "general", "stream_id": 1, "description": "General chat"}]
 
@@ -93,6 +95,39 @@ def test_messages_outputs_json(monkeypatch):
 
     assert result.exit_code == 0
     assert '"display_recipient": "general"' in result.output
+
+
+def test_search_topics_outputs_cross_stream_results(monkeypatch):
+    monkeypatch.setattr("chatzulip.cli._get_client", lambda: FakeClient())
+
+    result = CliRunner().invoke(
+        main,
+        ["search-topics", "release", "--stream", "general", "--json-output"],
+    )
+
+    assert result.exit_code == 0
+    assert '"topic": "release"' in result.output
+    assert '"url": "https://leanprover.zulipchat.com/' in result.output
+
+
+def test_search_outputs_stream_scoped_messages(monkeypatch):
+    monkeypatch.setattr("chatzulip.cli._get_client", lambda: FakeClient())
+
+    result = CliRunner().invoke(
+        main,
+        ["search", "ship", "--stream", "general", "--json-output"],
+    )
+
+    assert result.exit_code == 0
+    assert '"id": 7' in result.output
+    assert '"url": "https://leanprover.zulipchat.com/' in result.output
+
+
+def test_search_requires_explicit_stream_scope():
+    result = CliRunner().invoke(main, ["search", "ship"])
+
+    assert result.exit_code != 0
+    assert "Pass --stream at least once or use --all-streams" in result.output
 
 
 def test_profile_outputs_identity(monkeypatch):

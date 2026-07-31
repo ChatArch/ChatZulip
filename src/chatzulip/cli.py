@@ -37,6 +37,13 @@ def _echo_json(value: Any) -> None:
     click.echo(json.dumps(value, ensure_ascii=False, indent=2))
 
 
+def _validate_search_scope(streams: tuple[str, ...], all_streams: bool) -> None:
+    if streams and all_streams:
+        raise click.UsageError("Use either --stream or --all-streams, not both.")
+    if not streams and not all_streams:
+        raise click.UsageError("Pass --stream at least once or use --all-streams.")
+
+
 @click.group()
 @click.version_option(__version__, prog_name="chatzulip")
 def main() -> None:
@@ -96,6 +103,95 @@ def topics(stream: str | None, json_output: bool, interactive: bool | None) -> N
         return
     for item in sorted(items, key=lambda value: value.get("max_id") or 0, reverse=True):
         click.echo(f"- {item.get('name')} (max_id={item.get('max_id')})")
+
+
+@main.command(name="search-topics")
+@click.argument("query")
+@click.option("--stream", "streams", multiple=True, help="Search this stream; repeatable")
+@click.option(
+    "--all-streams",
+    is_flag=True,
+    help="Search every accessible public stream (may issue many API requests)",
+)
+@click.option("--limit", type=click.IntRange(min=1), default=100, show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON")
+def search_topics(
+    query: str,
+    streams: tuple[str, ...],
+    all_streams: bool,
+    limit: int,
+    json_output: bool,
+) -> None:
+    """Search topic names across explicitly selected public streams."""
+
+    _validate_search_scope(streams, all_streams)
+    try:
+        items = operations.search_topics(
+            query,
+            streams=list(streams),
+            all_streams=all_streams,
+            limit=limit,
+            client=_get_client(),
+        )
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        _echo_json(items)
+        return
+    if not items:
+        click.echo("No matching topics found.")
+        return
+    for item in items:
+        click.echo(
+            f"- {item.get('stream')} / {item.get('topic')} "
+            f"(max_id={item.get('max_id')})"
+        )
+        if item.get("url"):
+            click.echo(f"  {item['url']}")
+
+
+@main.command(name="search")
+@click.argument("query")
+@click.option("--stream", "streams", multiple=True, help="Search this stream; repeatable")
+@click.option(
+    "--all-streams",
+    is_flag=True,
+    help="Search every accessible public stream (may issue many API requests)",
+)
+@click.option("--since-hours", type=click.IntRange(min=1), default=None)
+@click.option("--per-stream", type=click.IntRange(min=1), default=100, show_default=True)
+@click.option("--limit", type=click.IntRange(min=1), default=100, show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON")
+def search_messages(
+    query: str,
+    streams: tuple[str, ...],
+    all_streams: bool,
+    since_hours: int | None,
+    per_stream: int,
+    limit: int,
+    json_output: bool,
+) -> None:
+    """Search message content using stream-scoped Zulip narrows."""
+
+    _validate_search_scope(streams, all_streams)
+    try:
+        items = operations.search_messages(
+            query,
+            streams=list(streams),
+            all_streams=all_streams,
+            since_hours=since_hours,
+            per_stream=per_stream,
+            limit=limit,
+            client=_get_client(),
+        )
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        _echo_json(items)
+        return
+    click.echo(operations.render_messages(items) if items else "No matching messages found.")
 
 
 @main.command(name="messages")

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add explicit cross-stream `search-topics` and message `search` commands for bots that can read public stream history but are not subscribed to every stream.
+- Add reusable Zulip topic/message permalink helpers and include canonical URLs in normalized search results.
+
 ## 0.1.0 - 2026-07-19
 
 ### Added

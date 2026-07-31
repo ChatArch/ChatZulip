@@ -14,7 +14,7 @@ ChatZulip is the ChatArch Zulip integration package. The current functional vers
 ## Current Capability Summary
 
 - ChatEnv provider: `zulip`, with `ZULIP_*` service-oriented fields.
-- CLI: `streams`, `topics`, `topic`, `messages`, `profile`, and `news`.
+- CLI: `streams`, `topics`, `search-topics`, `search`, `topic`, `messages`, `profile`, and `news`.
 - Python API: `ZulipClient` and `chatzulip.operations`.
 - MCP adapter: `chatzulip.mcp.register()`.
 - Write operations: available as Python/MCP capabilities, not default CLI commands yet.

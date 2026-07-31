@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Union
+from urllib.parse import quote
 
 from .client import JsonDict, ZulipClient
 from .config import ZulipConfig
@@ -57,6 +58,43 @@ def format_ts(timestamp: int) -> str:
     return dt.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
+def encode_narrow_segment(value: object) -> str:
+    """Encode a value using Zulip's dotted percent escapes for narrow URLs."""
+
+    return quote(str(value), safe="").replace("%", ".")
+
+
+def topic_permalink(
+    site: str,
+    *,
+    stream_id: int,
+    stream: str,
+    topic: str,
+    near: int | None = None,
+) -> str:
+    url = (
+        f"{site.rstrip('/')}/#narrow/channel/{stream_id}-{encode_narrow_segment(stream)}"
+        f"/topic/{encode_narrow_segment(topic)}"
+    )
+    return f"{url}/near/{near}" if near is not None else url
+
+
+def message_permalink(site: str, message: JsonDict) -> str | None:
+    stream_id = message.get("stream_id")
+    stream = message.get("display_recipient") or message.get("stream")
+    topic = message.get("subject")
+    message_id = message.get("id")
+    if not stream_id or not isinstance(stream, str) or not topic or not message_id:
+        return None
+    return topic_permalink(
+        site,
+        stream_id=int(stream_id),
+        stream=stream,
+        topic=str(topic),
+        near=int(message_id),
+    )
+
+
 def resolve_stream_id(client: Any, stream: str) -> int | None:
     if stream.isdigit():
         return int(stream)
@@ -82,6 +120,8 @@ def render_messages(messages: list[JsonDict]) -> str:
         if stream or topic:
             prefix += f" ({stream}/{topic})"
         lines.append(f"{prefix}: {clean_text(message.get('content', ''), 300)}")
+        if message.get("url"):
+            lines.append(f"  {message['url']}")
     return "\n".join(lines)
 
 
@@ -110,6 +150,154 @@ def list_topics(stream: str, client: Any | None = None) -> list[JsonDict]:
     if stream_id is None:
         raise ValueError(f"Stream not found: {stream}")
     return client.list_topics(stream_id)
+
+
+def _select_streams(
+    client: Any,
+    streams: list[str] | None,
+    *,
+    all_streams: bool,
+) -> list[JsonDict]:
+    requested = list(dict.fromkeys(streams or []))
+    available = client.list_streams(include_public=True)
+    by_name = {str(item.get("name")): item for item in available if item.get("name")}
+    by_id = {
+        int(item["stream_id"]): item
+        for item in available
+        if item.get("stream_id") is not None
+    }
+
+    if all_streams:
+        return [
+            item
+            for item in available
+            if item.get("name")
+            and item.get("stream_id") is not None
+            and not item.get("invite_only", False)
+        ]
+
+    selected: list[JsonDict] = []
+    for stream in requested:
+        item = by_id.get(int(stream)) if stream.isdigit() else by_name.get(stream)
+        if item is None:
+            raise ValueError(f"Stream not found: {stream}")
+        selected.append(item)
+    return selected
+
+
+def search_topics(
+    query: str,
+    *,
+    streams: list[str] | None = None,
+    all_streams: bool = False,
+    limit: int | None = 100,
+    client: Any | None = None,
+) -> list[JsonDict]:
+    """Search topic names across selected or all accessible public streams."""
+
+    if not query.strip():
+        raise ValueError("Search query must not be empty.")
+    if all_streams and streams:
+        raise ValueError("Use either selected streams or all_streams=True, not both.")
+    if not all_streams and not streams:
+        raise ValueError("Pass at least one stream or set all_streams=True.")
+
+    resolved_client = ensure_client(client)
+    selected = _select_streams(resolved_client, streams, all_streams=all_streams)
+    needle = query.casefold()
+    site_value = getattr(resolved_client, "site", None)
+    site = str(site_value).rstrip("/") if site_value else ""
+    matches: list[JsonDict] = []
+
+    for stream in selected:
+        stream_id = int(stream["stream_id"])
+        stream_name = str(stream["name"])
+        for topic in resolved_client.list_topics(stream_id):
+            topic_name = str(topic.get("name") or "")
+            if needle not in topic_name.casefold():
+                continue
+            max_id = topic.get("max_id")
+            item: JsonDict = {
+                "stream": stream_name,
+                "stream_id": stream_id,
+                "topic": topic_name,
+                "max_id": max_id,
+            }
+            if site:
+                item["url"] = topic_permalink(
+                    site,
+                    stream_id=stream_id,
+                    stream=stream_name,
+                    topic=topic_name,
+                    near=int(max_id) if max_id is not None else None,
+                )
+            matches.append(item)
+
+    matches.sort(key=lambda item: item.get("max_id") or 0, reverse=True)
+    return matches[:limit] if limit else matches
+
+
+def search_messages(
+    query: str,
+    *,
+    streams: list[str] | None = None,
+    all_streams: bool = False,
+    since_hours: int | None = None,
+    per_stream: int = 100,
+    limit: int | None = 100,
+    client: Any | None = None,
+) -> list[JsonDict]:
+    """Search message content with explicit stream-scoped Zulip narrows."""
+
+    if not query.strip():
+        raise ValueError("Search query must not be empty.")
+    if all_streams and streams:
+        raise ValueError("Use either selected streams or all_streams=True, not both.")
+    if not all_streams and not streams:
+        raise ValueError("Pass at least one stream or set all_streams=True.")
+    if per_stream < 1:
+        raise ValueError("per_stream must be at least 1.")
+    if since_hours is not None and since_hours < 1:
+        raise ValueError("since_hours must be at least 1.")
+
+    resolved_client = ensure_client(client)
+    selected = _select_streams(resolved_client, streams, all_streams=all_streams)
+    since_ts = int(time.time()) - since_hours * 3600 if since_hours is not None else None
+    site_value = getattr(resolved_client, "site", None)
+    site = str(site_value).rstrip("/") if site_value else ""
+    by_id: dict[int, JsonDict] = {}
+
+    for stream in selected:
+        stream_id = int(stream["stream_id"])
+        stream_name = str(stream["name"])
+        messages = resolved_client.get_messages(
+            anchor="newest",
+            num_before=per_stream,
+            num_after=0,
+            narrow=build_narrow(stream=stream_name, search=query),
+        )
+        for message in messages:
+            timestamp = int(message.get("timestamp") or 0)
+            if since_ts is not None and timestamp < since_ts:
+                continue
+            message_id = message.get("id")
+            if message_id is None:
+                continue
+            item = dict(message)
+            item.setdefault("stream_id", stream_id)
+            item.setdefault("display_recipient", stream_name)
+            if site:
+                url = message_permalink(site, item)
+                if url:
+                    item["url"] = url
+            by_id[int(message_id)] = item
+
+    matches = sorted(
+        by_id.values(),
+        key=lambda item: (item.get("timestamp") or 0, item.get("id") or 0),
+        reverse=True,
+    )
+    return matches[:limit] if limit else matches
 
 
 def get_messages(
