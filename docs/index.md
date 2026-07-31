@@ -16,7 +16,7 @@ ChatZulip 是 ChatArch 的 Zulip 集成包。当前功能版把 `ChatTool` 里�
 ## 当前能力摘要
 
 - ChatEnv provider：`zulip`，字段使用 `ZULIP_*` 服务语义。
-- CLI：`streams`、`topics`、`topic`、`messages`、`profile`、`news`。
+- CLI：`streams`、`topics`、`search-topics`、`search`、`topic`、`messages`、`profile`、`news`。
 - Python API：`ZulipClient` 和 `chatzulip.operations`。
 - MCP adapter：`chatzulip.mcp.register()`。
 - 写操作：先作为 Python/MCP 能力保留，暂不进入默认 CLI。

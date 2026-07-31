@@ -8,11 +8,15 @@
 chatzulip --version                         # 显示包版本
 chatzulip streams [--all] [--json-output]   # 列出已订阅或可访问 streams
 chatzulip topics --stream TEXT              # 列出某个 stream 的 topics
+chatzulip search-topics QUERY [scope...]    # 跨选定/全部公开 streams 搜 topic 名
+chatzulip search QUERY [scope...]           # 用 stream-scoped narrow 搜消息内容
 chatzulip topic --stream TEXT --topic TEXT  # 导出完整 topic thread
 chatzulip messages [filters...]             # 按 Zulip narrow 条件获取消息
 chatzulip profile [--json-output]           # 显示当前 bot/user profile
 chatzulip news [filters...] [--output PATH] # 生成近期消息 Markdown 摘要
 ```
+
+`search-topics` 和 `search` 要求显式传入至少一个可重复的 `--stream`，或显式使用 `--all-streams`。后者会对每个可访问公开 stream 发起 API 请求，因此不会作为隐式默认。`search` 还支持 `--since-hours`、`--per-stream` 和全局 `--limit`；搜索结果包含可直接打开的 Zulip permalink。
 
 ## 配置
 
@@ -36,6 +40,8 @@ ZULIP_NEWS_PER_STREAM
 | --- | --- |
 | `streams` | `chatzulip.operations.list_streams()` |
 | `topics` | `chatzulip.operations.list_topics()` |
+| `search-topics` | `chatzulip.operations.search_topics()` |
+| `search` | `chatzulip.operations.search_messages()` |
 | `topic` | `chatzulip.operations.get_topic_messages()` + `render_topic_markdown()` |
 | `messages` | `chatzulip.operations.get_messages()` |
 | `profile` | `chatzulip.client.ZulipClient.get_profile()` |

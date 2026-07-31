@@ -15,6 +15,8 @@ chatenv test -t zulip -I
 chatzulip profile
 chatzulip streams
 chatzulip topics --stream general
+chatzulip search-topics conjecture --all-streams --limit 20
+chatzulip search comparator --stream lean4 --since-hours 168 --limit 20
 chatzulip messages --stream general --before 5
 chatzulip topic --stream general --topic announcements --output /tmp/chatzulip-topic.md
 chatzulip news --stream general --since-hours 24 --output /tmp/chatzulip-news.md
