@@ -53,6 +53,36 @@ def test_version_option_reports_package_version():
     assert f"chatzulip, version {__version__}" in result.output
 
 
+def test_help_exposes_tree_and_no_template_hello():
+    result = CliRunner().invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "--tree" in result.output
+    assert "hello" not in result.output.lower()
+
+
+def test_tree_option_renders_registered_zulip_commands_and_no_template_hello():
+    result = CliRunner().invoke(main, ["--tree"])
+
+    assert result.exit_code == 0
+    assert "chatzulip" in result.output
+    assert "--help" in result.output
+    assert "--version" in result.output
+    assert "--tree" in result.output
+    for command in (
+        "streams",
+        "topics",
+        "search-topics",
+        "search",
+        "messages",
+        "topic",
+        "profile",
+        "news",
+    ):
+        assert command in result.output
+    assert "hello" not in result.output.lower()
+
+
 def test_streams_outputs_subscriptions(monkeypatch):
     monkeypatch.setattr("chatzulip.cli._get_client", lambda: FakeClient())
 

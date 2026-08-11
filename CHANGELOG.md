@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+## 0.1.1 - 2026-08-11
+
 ### Added
 
+- Add top-level `chatzulip --tree` output generated from the registered Click command surface.
+- Add MkDocs Material emoji renderer configuration so Material icon shorthand cannot leak to generated pages.
 - Add explicit cross-stream `search-topics` and message `search` commands for bots that can read public stream history but are not subscribed to every stream.
 - Add reusable Zulip topic/message permalink helpers and include canonical URLs in normalized search results.
 

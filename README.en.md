@@ -25,6 +25,7 @@ ChatZulip is the ChatArch Zulip integration package. It provides ChatEnv-backed 
 pip install -e ".[dev]"
 chatzulip --help
 chatzulip --version
+chatzulip --tree
 python -m pytest -q
 
 # Configure Zulip credentials with ChatEnv, then use the CLI.
