@@ -25,6 +25,7 @@ ChatZulip 是 ChatArch 的 Zulip 集成包，提供 ChatEnv-backed Zulip 配置�
 pip install -e ".[dev]"
 chatzulip --help
 chatzulip --version
+chatzulip --tree
 python -m pytest -q
 
 # 先用 ChatEnv 配置 Zulip 凭据，再使用 CLI。

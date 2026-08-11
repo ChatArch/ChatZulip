@@ -4,16 +4,21 @@
 
 ## 当前命令树
 
+运行时可用 `chatzulip --tree` 读取真实注册的 Click command surface。`--tree` 输出从 CLI registry 生成，不手写 README 示例。
+
 ```text
-chatzulip --version                         # 显示包版本
-chatzulip streams [--all] [--json-output]   # 列出已订阅或可访问 streams
-chatzulip topics --stream TEXT              # 列出某个 stream 的 topics
-chatzulip search-topics QUERY [scope...]    # 跨选定/全部公开 streams 搜 topic 名
-chatzulip search QUERY [scope...]           # 用 stream-scoped narrow 搜消息内容
-chatzulip topic --stream TEXT --topic TEXT  # 导出完整 topic thread
-chatzulip messages [filters...]             # 按 Zulip narrow 条件获取消息
-chatzulip profile [--json-output]           # 显示当前 bot/user profile
-chatzulip news [filters...] [--output PATH] # 生成近期消息 Markdown 摘要
+chatzulip # Zulip helpers for ChatArch workflows
+├── --help # Show this message and exit
+├── --version # Show the version and exit
+├── --tree # Print the registered command tree
+├── streams [--all] [--json-output] # List streams, subscribed by default
+├── topics [--stream STREAM] [--json-output] [--interactive] # List topics for a stream
+├── search-topics QUERY [--stream STREAMS] [--all-streams] [--limit LIMIT] [--json-output] # Search topic names across explicitly selected public streams
+├── search QUERY [--stream STREAMS] [--all-streams] [--since-hours SINCE-HOURS] [--per-stream PER-STREAM] [--limit LIMIT] [--json-output] # Search message content using stream-scoped Zulip narrows
+├── messages [--anchor ANCHOR] [--before NUM-BEFORE] [--after NUM-AFTER] [--stream STREAM] [--topic TOPIC] [--sender SENDER] [--search SEARCH] [--json-output] # Fetch messages with optional Zulip narrow filters
+├── topic [--stream STREAM] [--topic TOPIC-NAME] [--batch-size BATCH-SIZE] [--max-requests MAX-REQUESTS] [--output OUTPUT] [--json-output] [--interactive] # Export a full stream/topic thread
+├── profile [--json-output] # Show the authenticated bot/user profile
+└── news [--stream STREAMS] [--topic TOPICS] [--since-hours SINCE-HOURS] [--per-stream PER-STREAM] [--limit LIMIT] [--output OUTPUT] [--model MODEL] [--max-tokens MAX-TOKENS] [--temperature TEMPERATURE] # Render recent Zulip updates to Markdown
 ```
 
 `search-topics` 和 `search` 要求显式传入至少一个可重复的 `--stream`，或显式使用 `--all-streams`。后者会对每个可访问公开 stream 发起 API 请求，因此不会作为隐式默认。`search` 还支持 `--since-hours`、`--per-stream` 和全局 `--limit`；搜索结果包含可直接打开的 Zulip permalink。

@@ -92,6 +92,7 @@ tests/
 ```bash
 python -m pytest -q
 chatzulip --version
+chatzulip --tree
 chatzulip --help
 chatzulip topics -I
 chatenv --home <task-local-home> test -t zulip -I
