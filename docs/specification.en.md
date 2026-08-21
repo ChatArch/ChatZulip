@@ -32,6 +32,7 @@ Rules:
 
 - `ZULIP_BOT_API_KEY` is sensitive. Do not print real values in docs, tests, PR comments, or logs.
 - Client construction loads ChatEnv active/profile values before explicit constructor overrides.
+- Typed profiles live under `$CHATARCH_HOME/envs/Zulip/`; an explicitly selected profile must not backfill missing credentials from the process environment.
 - The package must not maintain a second dotenv/profile renderer; ChatEnv is the configuration system.
 - Do not add `CHATZULIP_*` credential aliases unless a future migration explicitly requires them.
 
@@ -42,6 +43,8 @@ The first CLI version exposes read-oriented and reporting commands:
 ```text
 chatzulip streams                          # List subscribed streams; --all shows accessible public streams
 chatzulip topics --stream TEXT             # List stream topics; missing stream can use ChatStyle prompts
+chatzulip search-topics QUERY --stream TEXT # Search topics in explicit stream scope
+chatzulip search QUERY --stream TEXT       # Search messages in explicit stream scope
 chatzulip topic --stream TEXT --topic TEXT # Export a full thread, optionally to Markdown
 chatzulip messages [filters...]            # Fetch messages by stream/topic/sender/search
 chatzulip profile                          # Show the authenticated bot/user profile
@@ -93,6 +96,7 @@ Verification gates:
 python -m pytest -q
 chatzulip --version
 chatzulip --tree
+chatzulip --tree-brief
 chatzulip --help
 chatzulip topics -I
 chatenv --home <task-local-home> test -t zulip -I

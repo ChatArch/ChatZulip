@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from chatenv import EnvStore, get_paths
 
 from chatzulip.client import ZulipClient
 from chatzulip.config import ZulipConfig
@@ -55,6 +56,59 @@ def test_missing_credentials_fail_cleanly(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError, match="Missing Zulip credentials"):
         ZulipClient(chatarch_home=tmp_path)
+
+
+def test_named_profile_uses_typed_chatenv_storage_and_ignores_process_credentials(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setenv("ZULIP_SITE", "https://process.zulipchat.com")
+    monkeypatch.setenv("ZULIP_BOT_EMAIL", "process@example.com")
+    monkeypatch.setenv("ZULIP_BOT_API_KEY", "process-secret")
+    store = EnvStore(get_paths(tmp_path).envs_dir)
+    profile_path = store.save_profile(
+        ZulipConfig,
+        "work",
+        {
+            "ZULIP_SITE": "https://profile.zulipchat.com",
+            "ZULIP_BOT_EMAIL": "profile@example.com",
+            "ZULIP_BOT_API_KEY": "profile-secret",
+        },
+    )
+
+    client = ZulipClient(
+        env_profile="work",
+        chatarch_home=tmp_path,
+        http_client=FakeHttpClient(),
+    )
+
+    assert profile_path == tmp_path / "envs" / "Zulip" / "work.env"
+    assert client.site == "https://profile.zulipchat.com"
+    assert client.email == "profile@example.com"
+    assert client.api_key == "profile-secret"
+
+
+def test_named_profile_does_not_backfill_missing_secret_from_process_env(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setenv("ZULIP_BOT_API_KEY", "process-secret")
+    store = EnvStore(get_paths(tmp_path).envs_dir)
+    store.save_profile(
+        ZulipConfig,
+        "work",
+        {
+            "ZULIP_SITE": "https://profile.zulipchat.com",
+            "ZULIP_BOT_EMAIL": "profile@example.com",
+        },
+    )
+
+    with pytest.raises(ValueError, match="Missing Zulip credentials"):
+        ZulipClient(
+            env_profile="work",
+            chatarch_home=tmp_path,
+            http_client=FakeHttpClient(),
+        )
 
 
 def test_get_messages_uses_zulip_api_params():

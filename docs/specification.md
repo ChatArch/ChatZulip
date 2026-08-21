@@ -32,6 +32,7 @@ ZULIP_NEWS_PER_STREAM
 
 - `ZULIP_BOT_API_KEY` 必须标记为 sensitive，文档、测试、PR 评论和日志都不能打印真实值。
 - 客户端构造时先读 ChatEnv active/profile 值，再允许显式参数覆盖。
+- typed profile 统一存入 `$CHATARCH_HOME/envs/Zulip/`；显式选择 profile 时不得从进程环境回填缺失凭据。
 - 包内不维护第二套 dotenv/profile 渲染逻辑；ChatEnv 是配置系统的唯一入口。
 - 不引入 `CHATZULIP_*` 凭据别名，避免把服务凭据拆成包名命名空间。
 
@@ -42,6 +43,8 @@ ZULIP_NEWS_PER_STREAM
 ```text
 chatzulip streams                         # 列出已订阅 streams；--all 显示可访问 public streams
 chatzulip topics --stream TEXT            # 列出 stream topics；缺 stream 时支持 ChatStyle 交互补问
+chatzulip search-topics QUERY --stream TEXT # 在显式 stream 范围搜索 topic
+chatzulip search QUERY --stream TEXT      # 在显式 stream 范围搜索消息
 chatzulip topic --stream TEXT --topic TEXT # 导出完整 thread，可写 Markdown 文件
 chatzulip messages [filters...]           # 按 stream/topic/sender/search 获取消息
 chatzulip profile                         # 查看当前 bot/user profile
@@ -93,6 +96,7 @@ tests/
 python -m pytest -q
 chatzulip --version
 chatzulip --tree
+chatzulip --tree-brief
 chatzulip --help
 chatzulip topics -I
 chatenv --home <task-local-home> test -t zulip -I

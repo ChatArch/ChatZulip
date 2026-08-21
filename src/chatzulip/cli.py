@@ -6,7 +6,13 @@ import json
 from typing import Any
 
 import click
-from chatstyle import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
+from chatstyle import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    add_tree_option,
+    resolve_command_inputs,
+)
 
 from chatzulip import __version__
 from chatzulip import operations
@@ -44,113 +50,9 @@ def _validate_search_scope(streams: tuple[str, ...], all_streams: bool) -> None:
         raise click.UsageError("Pass --stream at least once or use --all-streams.")
 
 
-def _format_metavar(value: str) -> str:
-    return value.replace("_", "-").upper()
-
-
-def _format_argument(param: click.Argument) -> str:
-    metavar = _format_metavar(param.name or "ARG")
-    if param.nargs != 1:
-        metavar = f"{metavar}..."
-    return f"[{metavar}]" if not param.required else metavar
-
-
-def _format_option(param: click.Option) -> str:
-    option = next((opt for opt in param.opts if opt.startswith("--")), param.opts[0])
-    if param.is_flag or param.flag_value is not None:
-        return option
-    return f"{option} {_format_metavar(param.name or 'VALUE')}"
-
-
-def _command_signature(name: str, command: click.Command) -> str:
-    parts = [name]
-    for param in command.params:
-        if isinstance(command, click.Group) and isinstance(param, click.Option):
-            continue
-        if isinstance(param, click.Argument):
-            parts.append(_format_argument(param))
-        elif isinstance(param, click.Option) and not getattr(param, "hidden", False):
-            parts.append(f"[{_format_option(param)}]")
-    return " ".join(parts)
-
-
-def _command_help(command: click.Command) -> str:
-    return (command.short_help or command.help or "").strip().rstrip(".")
-
-
-def _group_items(group: click.Group) -> list[tuple[str, str | click.Command]]:
-    items: list[tuple[str, str | click.Command]] = []
-    if group is main:
-        items.extend(
-            [
-                ("--help", "Show this message and exit"),
-                ("--version", "Show the version and exit"),
-                ("--tree", "Print the registered command tree"),
-            ]
-        )
-    for param in group.params:
-        if isinstance(param, click.Option) and not getattr(param, "hidden", False):
-            opts = set(param.opts)
-            if "--help" in opts or "--version" in opts or "--tree" in opts:
-                continue
-            items.append((_format_option(param), param.help or ""))
-    for name, command in group.commands.items():
-        if command.hidden:
-            continue
-        items.append((name, command))
-    return items
-
-
-def render_cli_tree(root: click.Group | None = None) -> str:
-    """Render the registered Click command tree for `chatzulip --tree`."""
-    if root is None:
-        root = main
-    lines = [f"{root.name or 'chatzulip'} # {_command_help(root)}"]
-
-    def walk(items: list[tuple[str, str | click.Command]], prefix: str = "") -> None:
-        for index, (name, entry) in enumerate(items):
-            connector = "└── " if index == len(items) - 1 else "├── "
-            child_prefix = prefix + ("    " if index == len(items) - 1 else "│   ")
-            if isinstance(entry, click.Command):
-                signature = _command_signature(name, entry)
-                help_text = _command_help(entry)
-                lines.append(
-                    f"{prefix}{connector}{signature} # {help_text}"
-                    if help_text
-                    else f"{prefix}{connector}{signature}"
-                )
-                if isinstance(entry, click.Group):
-                    walk(_group_items(entry), child_prefix)
-            else:
-                lines.append(
-                    f"{prefix}{connector}{name} # {entry}"
-                    if entry
-                    else f"{prefix}{connector}{name}"
-                )
-
-    walk(_group_items(root))
-    return "\n".join(lines)
-
-
-def _tree_callback(context: click.Context, _param: click.Parameter, value: bool) -> None:
-    if not value or context.resilient_parsing:
-        return
-    if not isinstance(context.command, click.Group):
-        raise click.ClickException("--tree is only available on command groups")
-    click.echo(render_cli_tree(context.command))
-    context.exit()
-
-
 @click.group(name="chatzulip", context_settings={"help_option_names": ["-h", "--help"]})
-@click.option(
-    "--tree",
-    is_flag=True,
-    is_eager=True,
-    expose_value=False,
-    callback=_tree_callback,
-    help="Print the registered command tree and exit.",
-)
 @click.version_option(__version__, prog_name="chatzulip")
+@add_tree_option(renderer_options={"root_name": "chatzulip"})
 def main() -> None:
     """Zulip helpers for ChatArch workflows."""
 
