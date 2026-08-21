@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.1.2 - 2026-08-22
+
+### Changed
+
+- Replace the package-local CLI tree renderer with ChatStyle's registered Click tree runtime and add `chatzulip --tree-brief`.
+- Require `chatstyle>=0.2.0,<0.3.0` and `chatenv>=0.2.10,<0.3.0`, preserving the typed `zulip` provider and canonical ChatEnv storage paths.
+- Keep explicitly selected ChatEnv profiles isolated from process credentials when profile fields are missing.
+- Verify Python 3.10-3.12, installed CLI trees, package artifacts, Twine metadata, and strict docs in CI.
+
 ## 0.1.1 - 2026-08-11
 
 ### Added

@@ -5,4 +5,4 @@ from .config import ZulipConfig
 
 __all__ = ["ZulipClient", "ZulipConfig", "__version__"]
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"

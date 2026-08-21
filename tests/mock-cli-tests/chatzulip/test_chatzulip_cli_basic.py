@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from click.testing import CliRunner
 
 from chatzulip import __version__
@@ -53,22 +55,27 @@ def test_version_option_reports_package_version():
     assert f"chatzulip, version {__version__}" in result.output
 
 
-def test_help_exposes_tree_and_no_template_hello():
+def test_help_exposes_full_and_brief_trees_and_no_template_hello():
     result = CliRunner().invoke(main, ["--help"])
 
     assert result.exit_code == 0
     assert "--tree" in result.output
+    assert "--tree-brief" in result.output
     assert "hello" not in result.output.lower()
 
 
-def test_tree_option_renders_registered_zulip_commands_and_no_template_hello():
+def test_tree_option_renders_registered_zulip_commands_with_signatures():
     result = CliRunner().invoke(main, ["--tree"])
 
-    assert result.exit_code == 0
-    assert "chatzulip" in result.output
-    assert "--help" in result.output
-    assert "--version" in result.output
-    assert "--tree" in result.output
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == "chatzulip"
+    assert "--help  # Show this message and exit." in result.output
+    assert "--version  # Show the version and exit." in result.output
+    assert "--tree  # Print the registered CLI tree and exit." in result.output
+    assert (
+        "--tree-brief  # Print the registered CLI tree without parameter signatures and exit."
+        in result.output
+    )
     for command in (
         "streams",
         "topics",
@@ -80,7 +87,55 @@ def test_tree_option_renders_registered_zulip_commands_and_no_template_hello():
         "news",
     ):
         assert command in result.output
+    assert "search <QUERY>" in result.output
+    assert "[--stream STREAMS]" in result.output
+    assert "[--all-streams]" in result.output
+    assert "[--interactive]" in result.output
     assert "hello" not in result.output.lower()
+
+
+def test_tree_brief_keeps_nodes_and_descriptions_but_omits_signatures():
+    full = CliRunner().invoke(main, ["--tree"])
+    brief = CliRunner().invoke(main, ["--tree-brief"])
+
+    assert full.exit_code == 0, full.output
+    assert brief.exit_code == 0, brief.output
+    assert brief.output.splitlines()[0] == "chatzulip"
+    for description in (
+        "List streams, subscribed by default.",
+        "List topics for a stream.",
+        "Search topic names across explicitly selected public streams.",
+        "Search message content using stream-scoped Zulip narrows.",
+        "Fetch messages with optional Zulip narrow filters.",
+        "Export a full stream/topic thread.",
+        "Show the authenticated bot/user profile.",
+        "Render recent Zulip updates to Markdown.",
+    ):
+        assert description in full.output
+        assert description in brief.output
+    assert "<QUERY>" in full.output
+    assert "[--stream STREAMS]" in full.output
+    assert "[--interactive]" in full.output
+    assert "<QUERY>" not in brief.output
+    assert "[--stream STREAMS]" not in brief.output
+    assert "[--interactive]" not in brief.output
+
+
+def test_tree_root_uses_public_console_command_in_module_mode():
+    result = CliRunner().invoke(main, ["--tree"], prog_name="python -m chatzulip.cli")
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == "chatzulip"
+    assert "python -m chatzulip.cli" not in result.output
+
+
+def test_bilingual_cli_tree_docs_embed_the_registered_full_tree():
+    result = CliRunner().invoke(main, ["--tree"])
+
+    assert result.exit_code == 0, result.output
+    documented_tree = f"```text\n{result.output.rstrip()}\n```"
+    for doc in (Path("docs/cli-tree.md"), Path("docs/cli-tree.en.md")):
+        assert documented_tree in doc.read_text(encoding="utf-8")
 
 
 def test_streams_outputs_subscriptions(monkeypatch):

@@ -26,6 +26,7 @@ pip install -e ".[dev]"
 chatzulip --help
 chatzulip --version
 chatzulip --tree
+chatzulip --tree-brief
 python -m pytest -q
 
 # 先用 ChatEnv 配置 Zulip 凭据，再使用 CLI。
@@ -42,12 +43,13 @@ chatzulip news --stream general --since-hours 24 --output zulip-news.md
 
 ## CLI 规范
 
-这个包依赖 `chatstyle>=0.1.0,<0.2.0`、`chatenv>=0.2.3,<0.3.0` 和 `httpx>=0.28.1,<1.0`，新的命令应优先使用：
+这个包依赖 `chatstyle>=0.2.0,<0.3.0`、`chatenv>=0.2.10,<0.3.0` 和 `httpx>=0.28.1,<1.0`，新的命令应优先使用：
 
 - `CommandSchema` / `CommandField` 描述输入。
 - `add_interactive_option()` 提供统一 `-i/-I`。
+- `add_tree_option()` 从真实 Click registry 提供 `--tree` / `--tree-brief`。
 - `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
-- 默认生成 `config.py` 和 `chatenv.configs` entry point，使包可被 ChatEnv 发现；只有明确不需要 ChatEnv 接入时才使用 `--without-chatenv-provider`。
+- `config.py` 和 `chatenv.configs` entry point 使 `zulip` provider 可被 ChatEnv 发现；配置统一存入 `~/.chatarch/envs/Zulip/`（或 `$CHATARCH_HOME/envs/Zulip/`）。
 
 ## 目录结构
 

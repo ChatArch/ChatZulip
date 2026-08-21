@@ -26,6 +26,7 @@ pip install -e ".[dev]"
 chatzulip --help
 chatzulip --version
 chatzulip --tree
+chatzulip --tree-brief
 python -m pytest -q
 
 # Configure Zulip credentials with ChatEnv, then use the CLI.
@@ -42,12 +43,13 @@ For package boundaries, CLI/API conventions, and release order, see [ChatZulip S
 
 ## CLI Contract
 
-This package depends on `chatstyle>=0.1.0,<0.2.0`, `chatenv>=0.2.3,<0.3.0`, and `httpx>=0.28.1,<1.0`. New commands should prefer:
+This package depends on `chatstyle>=0.2.0,<0.3.0`, `chatenv>=0.2.10,<0.3.0`, and `httpx>=0.28.1,<1.0`. New commands should prefer:
 
 - `CommandSchema` / `CommandField` for inputs.
 - `add_interactive_option()` for the shared `-i/-I` switch.
+- `add_tree_option()` for registry-backed `--tree` and `--tree-brief`.
 - `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
-- Generate `config.py` and a `chatenv.configs` entry point by default so the package is ChatEnv-discoverable; use `--without-chatenv-provider` only when ChatEnv integration is intentionally not needed.
+- `config.py` and the `chatenv.configs` entry point make the typed `zulip` provider discoverable; configuration lives under `~/.chatarch/envs/Zulip/` (or `$CHATARCH_HOME/envs/Zulip/`).
 
 ## Layout
 

@@ -12,6 +12,9 @@ Doc-first real-service smoke plan for `chatzulip`. These commands require a vali
 
 ```bash
 chatenv test -t zulip -I
+chatzulip --version
+chatzulip --tree
+chatzulip --tree-brief
 chatzulip profile
 chatzulip streams
 chatzulip topics --stream general

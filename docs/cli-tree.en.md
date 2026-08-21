@@ -1,10 +1,10 @@
-# CLI 能力地图
+# CLI Capability Map
 
-`ChatZulip` 提供从 ChatTool 迁移出的 Zulip 集成 CLI。CLI 是薄适配层，核心逻辑位于 `chatzulip.operations` 和 `chatzulip.client`。
+`ChatZulip` provides the Zulip integration CLI extracted from ChatTool. The CLI is a thin adapter over `chatzulip.operations` and `chatzulip.client`.
 
-## 当前命令树
+## Registered command tree
 
-运行时可用 `chatzulip --tree` 读取带参数签名的真实 Click command surface；`chatzulip --tree-brief` 输出相同节点和说明，但省略参数签名。两者都由 ChatStyle 从 CLI registry 渲染，不使用包内 renderer。
+Run `chatzulip --tree` for the real Click command surface with parameter signatures. `chatzulip --tree-brief` keeps the same nodes and descriptions without signatures. ChatStyle renders both directly from the CLI registry; ChatZulip does not maintain a local tree renderer.
 
 ```text
 chatzulip
@@ -22,7 +22,7 @@ chatzulip
 └── topics [--stream STREAM] [--json-output] [--interactive]  # List topics for a stream.
 ```
 
-紧凑输出：
+Brief output:
 
 ```text
 chatzulip
@@ -40,11 +40,11 @@ chatzulip
 └── topics  # List topics for a stream.
 ```
 
-`search-topics` 和 `search` 要求显式传入至少一个可重复的 `--stream`，或显式使用 `--all-streams`。后者会对每个可访问公开 stream 发起 API 请求，因此不会作为隐式默认。`search` 还支持 `--since-hours`、`--per-stream` 和全局 `--limit`；搜索结果包含可直接打开的 Zulip permalink。
+`search-topics` and `search` require at least one repeatable `--stream`, or the explicit `--all-streams` switch. The latter may issue one API request per accessible public stream, so it is never an implicit default. Search results include canonical Zulip permalinks.
 
-## 配置
+## Configuration
 
-ChatZulip 使用 ChatEnv 的 `zulip` provider，字段名沿用 Zulip 服务语义：
+ChatZulip registers a typed ChatEnv `zulip` provider with these service-oriented fields:
 
 ```text
 ZULIP_SITE
@@ -56,9 +56,9 @@ ZULIP_NEWS_SINCE_HOURS
 ZULIP_NEWS_PER_STREAM
 ```
 
-`ZULIP_BOT_API_KEY` 是敏感字段；CLI 输出和文档示例不应打印真实值。typed profile 存入 `$CHATARCH_HOME/envs/Zulip/`。
+`ZULIP_BOT_API_KEY` is sensitive and must never be printed. Profiles are stored under `$CHATARCH_HOME/envs/Zulip/`.
 
-## Python API 对应关系
+## Python API mapping
 
 | CLI | Python API |
 | --- | --- |
@@ -71,15 +71,15 @@ ZULIP_NEWS_PER_STREAM
 | `profile` | `chatzulip.client.ZulipClient.get_profile()` |
 | `news` | `chatzulip.operations.summarize_news()` |
 
-`chatzulip news` 默认会尝试使用可选 `chattool` LLM summarizer；没有安装 `chatzulip[llm]` 或当前环境不可用时，会自动降级为 rule-based Markdown 摘要。
+`chatzulip news` uses the optional ChatTool LLM summarizer when available and falls back to a rule-based Markdown digest otherwise.
 
-## 写操作边界
+## Write boundary
 
-第一版 CLI 保持从 ChatTool 迁移来的 read-oriented 命令面。写操作通过 importable API 和 MCP adapter 暴露：
+The default CLI remains read-oriented. Write operations are importable Python and MCP capabilities:
 
 - `chatzulip.operations.send_message()`
 - `chatzulip.operations.react()`
 - `chatzulip.operations.upload_file()`
 - `chatzulip.mcp.register()`
 
-未来如果要把写操作放入 CLI，应单独设计确认、dry-run、权限和真实 Zulip smoke 测试。
+Adding write commands to the CLI requires a separate design for confirmation, dry-run behavior, permissions, and real Zulip smoke tests.

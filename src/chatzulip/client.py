@@ -71,6 +71,16 @@ class ZulipClient:
             )
         except Exception:
             values = {}
+        if env_profile:
+            values = {
+                field.env_key: values.get(
+                    field.env_key,
+                    field.default if field.default is not None else "",
+                )
+                for field in ZulipConfig.get_fields().values()
+            }
+            ZulipConfig.load_from_sources(override_values=values)
+            return values
         ZulipConfig.load_from_sources(env_values=values)
         return values
 
